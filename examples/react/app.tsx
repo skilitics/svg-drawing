@@ -33,7 +33,8 @@ const Example = () => {
   const [penThinnerWidth, setPenThinnerWidth] = useState<number>(0)
   const handleColor = useCallback(() => {
     changePenColor(getRandomColor())
-  }, [changePenColor])
+    console.log(instance)
+  }, [changePenColor, instance])
 
   const handlePenWidth = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
