@@ -36,6 +36,10 @@ export class Point {
     return new Point(this.x - p.x, this.y - p.y)
   }
 
+  public reverse(): Point {
+    return new Point(-this.x, -this.y)
+  }
+
   public eql(p: Point): boolean {
     return this.x === p.x && this.y === p.y
   }

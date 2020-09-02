@@ -28,6 +28,7 @@ export class SvgDrawing extends Renderer implements DrawingOption {
   private _left: number
   private _drawPath: Path | null
   private _drawMoveThrottle: this['drawMove']
+  private _prevPoint: [number, number] | null
   private _listenerOption: ReturnType<typeof getPassiveOptions>
   private _clearPointListener: (() => void) | null
   private _clearMouseListener: (() => void) | null
@@ -65,6 +66,7 @@ export class SvgDrawing extends Renderer implements DrawingOption {
     this._left = left
     this._top = top
     this._drawPath = null
+    this._prevPoint = null
     this._listenerOption = getPassiveOptions(false)
     this._clearPointListener = null
     this._clearMouseListener = null
@@ -136,7 +138,8 @@ export class SvgDrawing extends Renderer implements DrawingOption {
   public drawMove(x: number, y: number): void {
     if (!this._drawPath) return
     const po: [number, number] = [x - this._left, y - this._top]
-    this._addDrawPoint(po)
+    // this._addDrawPoint(po)
+    this._addDrawPointRelative(po)
     if (
       (this._drawPath.attrs.strokeWidth &&
         +this._drawPath.attrs.strokeWidth !== this.penWidth) ||
@@ -154,6 +157,7 @@ export class SvgDrawing extends Renderer implements DrawingOption {
       this._drawPath.commands.push(new Command(COMMAND_TYPE.CLOSE))
     }
     this._drawPath = null
+    this._prevPoint = null
     this.update()
   }
 
@@ -186,8 +190,50 @@ export class SvgDrawing extends Renderer implements DrawingOption {
     }
 
     const p4 = new Point(po[0], po[1])
-    commands[commands.length - 1] = this.bezier.createCommand(p1, p2, p3, p4)
-    commands.push(this.bezier.createCommand(p2, p3, p4, p4))
+    commands[commands.length - 1] = this.bezier.createCurve(p1, p2, p3, p4)
+    commands.push(this.bezier.createCurve(p2, p3, p4, p4))
+  }
+
+  private _addDrawPointRelative(current: [number, number]) {
+    if (!this._drawPath) return
+
+    const commands = this._drawPath.commands
+    if (!this._prevPoint) {
+      this._drawPath.commands.push(new Command(COMMAND_TYPE.MOVE, current))
+      this._prevPoint = current
+      return
+    }
+
+    const po: [number, number] = [
+      current[0] - this._prevPoint[0],
+      current[1] - this._prevPoint[1],
+    ]
+    this._prevPoint = current
+
+    if (!this.curve || commands.length < 2) {
+      this._drawPath.commands.push(new Command(COMMAND_TYPE.LINE_RELATIVE, po))
+      return
+    }
+
+    const p1 =
+      commands.length < 4
+        ? new Point(0, 0)
+        : commands[commands.length - 3].point
+    const p2 = commands[commands.length - 2].point
+    const p3 = commands[commands.length - 1].point
+
+    if (!p1 || !p2 || !p3) {
+      this._drawPath.commands.push(new Command(COMMAND_TYPE.LINE_RELATIVE, po))
+      return
+    }
+
+    const p4 = new Point(po[0], po[1])
+    this._drawPath.commands[
+      commands.length - 1
+    ] = this.bezier.createCurveRelative(p1, p2, p3, p4)
+    this._drawPath.commands.push(
+      this.bezier.createCurveRelative(p2, p3, p4, new Point(0, 0))
+    )
   }
 
   private _createDrawPath(): Path {
