@@ -4,7 +4,9 @@ import { BezierCurve } from './bezier'
 import { throttle } from './throttle'
 import { getPassiveOptions } from './shared/getPassiveOptions'
 
+export type DrawingMode = 'pen' | 'pencil'
 export interface DrawingOption extends RendererOption {
+  mode?: DrawingMode
   penColor?: string
   penWidth?: number
   close?: boolean
@@ -13,7 +15,8 @@ export interface DrawingOption extends RendererOption {
   fill?: string
 }
 
-export class SvgDrawing extends Renderer {
+export class SvgDrawing extends Renderer implements DrawingOption {
+  public mode: DrawingMode
   public penColor: string
   public penWidth: number
   public fill: string
@@ -21,15 +24,19 @@ export class SvgDrawing extends Renderer {
   public close: boolean
   public delay: number
   public bezier: BezierCurve
+  private _top: number
+  private _left: number
   private _drawPath: Path | null
   private _drawMoveThrottle: this['drawMove']
   private _listenerOption: ReturnType<typeof getPassiveOptions>
   private _clearPointListener: (() => void) | null
   private _clearMouseListener: (() => void) | null
   private _clearTouchListener: (() => void) | null
+  private _clearPenListener: (() => void) | null
   constructor(
     el: HTMLElement,
     {
+      mode,
       penColor,
       penWidth,
       curve,
@@ -41,21 +48,28 @@ export class SvgDrawing extends Renderer {
   ) {
     super(el, { ...rendOpt })
     /**
-     * Setup parameter
+     * Setup Option
      */
+    this.mode = mode ?? 'pencil'
     this.penColor = penColor ?? '#000'
     this.penWidth = penWidth ?? 1
     this.curve = curve ?? true
     this.close = close ?? false
     this.delay = delay ?? 20
     this.fill = fill ?? 'none'
+    /**
+     * Setup property
+     */
+    const { left, top } = el.getBoundingClientRect()
     this.bezier = new BezierCurve()
+    this._left = left
+    this._top = top
     this._drawPath = null
     this._listenerOption = getPassiveOptions(false)
     this._clearPointListener = null
     this._clearMouseListener = null
     this._clearTouchListener = null
-
+    this._clearPenListener = null
     /**
      * Setup listener
      */
@@ -65,6 +79,7 @@ export class SvgDrawing extends Renderer {
     this._handleEnd = this._handleEnd.bind(this)
     this._drawMoveThrottle = throttle(this.drawMove, this.delay)
     this.on()
+    this._setupScrollListener()
   }
 
   public clear(): void {
@@ -85,6 +100,10 @@ export class SvgDrawing extends Renderer {
   public on(): void {
     this.off()
 
+    if (this.mode === 'pen') {
+      this._setupPenListener()
+      return
+    }
     if (window.PointerEvent) {
       this._setupPointEventListener()
     } else {
@@ -100,6 +119,7 @@ export class SvgDrawing extends Renderer {
       this._clearPointListener,
       this._clearMouseListener,
       this._clearTouchListener,
+      this._clearPenListener,
     ].map((clear) => {
       if (!clear) return
       clear()
@@ -115,7 +135,7 @@ export class SvgDrawing extends Renderer {
 
   public drawMove(x: number, y: number): void {
     if (!this._drawPath) return
-    const po: [number, number] = [x - this.left, y - this.top]
+    const po: [number, number] = [x - this._left, y - this._top]
     this._addDrawPoint(po)
     if (
       (this._drawPath.attrs.strokeWidth &&
@@ -171,7 +191,6 @@ export class SvgDrawing extends Renderer {
   }
 
   private _createDrawPath(): Path {
-    this.resizeElement()
     return new Path({
       stroke: this.penColor,
       strokeWidth: String(this.penWidth),
@@ -200,6 +219,18 @@ export class SvgDrawing extends Renderer {
   private _handleDraw(ev: MouseEvent | PointerEvent) {
     ev.preventDefault()
     this._drawMoveThrottle(ev.clientX, ev.clientY)
+  }
+  /**
+   * Scroll Listener
+   */
+  private _setupScrollListener() {
+    const handle = () => {
+      const { left, top } = this.el.getBoundingClientRect()
+      this._left = left
+      this._top = top
+    }
+
+    window.addEventListener('scroll', handle, this._listenerOption)
   }
 
   /**
@@ -292,6 +323,59 @@ export class SvgDrawing extends Renderer {
       this.el.removeEventListener('touchmove', this._handleDrawForTouch)
       this.el.removeEventListener('touchend', this._handleEnd)
       window.removeEventListener('touchcancel', this._handleEnd)
+    }
+  }
+
+  /**
+   * Pen Mode
+   */
+  private _setupPenListener(): void {
+    const handleDraw = (ev: MouseEvent) => {
+      if (!this._drawPath) {
+        this.drawStart()
+      }
+      this._handleDraw(ev)
+    }
+    const handleKeyDown = (ev: KeyboardEvent) => {
+      if (ev.code === 'Escape' || ev.key === 'Escape' || ev.keyCode === 27) {
+        this.drawEnd()
+      }
+    }
+    const handleStop = (ev: MouseEvent) => {
+      const inDrawArea = (x: number, y: number) => {
+        const rect = this.el.getBoundingClientRect()
+        console.log(
+          rect.left,
+          rect.top,
+          rect.left + rect.width,
+          rect.top + rect.height,
+          x,
+          y
+        )
+        if (
+          rect.left > x ||
+          rect.top > y ||
+          rect.left + rect.width < x ||
+          rect.top + rect.height < y
+        ) {
+          return false
+        }
+        return true
+      }
+      console.log(inDrawArea(ev.clientX, ev.clientY))
+
+      if (!inDrawArea(ev.clientX, ev.clientY)) {
+        this.drawEnd()
+      }
+    }
+    this.el.addEventListener('click', handleDraw, this._listenerOption)
+    document.addEventListener('keydown', handleKeyDown, this._listenerOption)
+    window.addEventListener('click', handleStop, this._listenerOption)
+    // this.el.removeEventListener('touchend', handlePen)
+    this._clearPenListener = () => {
+      this.el.removeEventListener('click', handleDraw)
+      document.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('click', handleStop)
     }
   }
 }

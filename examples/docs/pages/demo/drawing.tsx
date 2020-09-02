@@ -64,7 +64,9 @@ const DrawingDemo: NextPage<Props> = ({ isSp }) => {
   const [penColor, setPenColor] = useState('black')
   const [delay, setDelay] = useState(20)
   const [penWidth, setPenWidth] = useState(5)
+  const [mode, setMode] = useState('pencil')
   const [divRef, draw] = useSvgDrawing({
+    mode,
     curve,
     close,
     delay,

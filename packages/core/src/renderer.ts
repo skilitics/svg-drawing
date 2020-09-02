@@ -3,17 +3,13 @@ import { Svg, SvgOption } from './svg'
 export type RendererOption = Omit<SvgOption, 'width' | 'height'>
 export class Renderer extends Svg {
   public el: HTMLElement
-  public top: number
-  public left: number
   constructor(el: HTMLElement, opt: RendererOption = {}) {
-    const { width, height, left, top } = el.getBoundingClientRect()
+    const { width, height } = el.getBoundingClientRect()
     super({ width, height, ...opt })
     /**
      * Setup parameter
      */
     this.el = el
-    this.left = left
-    this.top = top
     el.appendChild(this.toElement())
     this._setupAdjustResize()
   }
@@ -32,8 +28,6 @@ export class Renderer extends Svg {
     this.scalePath(width / this.width)
     this.width = width
     this.height = height
-    this.left = left
-    this.top = top
   }
 
   private _setupAdjustResize(): void {
