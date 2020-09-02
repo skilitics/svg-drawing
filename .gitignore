@@ -16,6 +16,7 @@ dist
 lib
 .size-snapshot.json
 .changelog
+benchmark.txt
 
 # log
 npm-debug.log*
