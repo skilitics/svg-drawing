@@ -108,7 +108,7 @@ export class DrawHandler {
 
   private _handleMove(ev: MouseEvent | PointerEvent | TouchEvent) {
     ev.preventDefault()
-    if (ev instanceof TouchEvent) {
+    if (window.TouchEvent && ev instanceof TouchEvent) {
       const touch = ev.touches[0]
       this.move({
         x: touch.clientX - this._left,
