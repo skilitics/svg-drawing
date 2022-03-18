@@ -1,4 +1,4 @@
-import type { RendererOption, Path } from '@svg-drawing/core'
+import type { RendererOption, Path } from '@svg-drawing-te/core'
 export type AnimationOption = RendererOption & {
   ms: number
 }

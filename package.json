@@ -1,5 +1,5 @@
 {
-  "name": "@svg-drawing/root",
+  "name": "@svg-drawing-te/root",
   "private": true,
   "workspaces": [
     "packages/*",

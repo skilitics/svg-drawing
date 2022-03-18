@@ -1,5 +1,5 @@
 {
-  "name": "@svg-drawing/animation",
+  "name": "@svg-drawing-te/animation",
   "version": "4.2.2",
   "license": "MIT",
   "description": "svg drawing library.",
@@ -37,7 +37,7 @@
     "prepare": "yarn build"
   },
   "optionalDependencies": {
-    "@svg-drawing/core": "4.2.2"
+    "@svg-drawing-te/core": "4.2.2"
   },
   "publishConfig": {
     "access": "public"

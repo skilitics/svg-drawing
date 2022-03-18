@@ -1,6 +1,6 @@
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
-import { svgObjectToElement } from '@svg-drawing/core/lib/renderer'
+import { svgObjectToElement } from '@svg-drawing-te/core/lib/renderer'
 import { loadPngData } from './__test__/loadPngData'
 import { Palette } from './palette'
 import { ImgTrace } from './trace'

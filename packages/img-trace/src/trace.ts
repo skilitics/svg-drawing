@@ -1,7 +1,7 @@
-import { Svg, Path, Command } from '@svg-drawing/core'
+import { Svg, Path, Command } from '@svg-drawing-te/core'
 import { convertRGBAImage } from './utils/convertRGBAImage'
 import type { Rgba } from './palette'
-import type { PathObject } from '@svg-drawing/core'
+import type { PathObject } from '@svg-drawing-te/core'
 
 type ColorQuantization = number[][]
 // Edge node types ( ▓: this layer or 1; ░: not this layer or 0 )
