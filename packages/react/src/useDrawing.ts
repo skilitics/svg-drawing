@@ -1,6 +1,6 @@
 import { SvgDrawing } from '@svg-drawing-te/core/lib/drawing'
 import { svgObjectToElement } from '@svg-drawing-te/core/lib/renderer'
-import React, { useRef, useEffect, useCallback } from 'react'
+import React, { useRef, useEffect, useCallback, useMemo } from "react";
 import type { UseSvgDrawing } from './types'
 import type { DrawingOption } from '@svg-drawing-te/core/lib/types'
 import type { MutableRefObject } from 'react'
@@ -58,9 +58,8 @@ export const useSvgDrawing = (
     })
   })
 
-  return [
-    renderRef,
-    {
+  const draw = useMemo(
+    () => ({
       ref: drawingRef,
       changePenWidth,
       changePenColor,
@@ -72,6 +71,20 @@ export const useSvgDrawing = (
       undo,
       getSvgXML,
       download,
-    },
-  ]
+    }),
+    [
+      changeClose,
+      changeCurve,
+      changeDelay,
+      changeFill,
+      changePenColor,
+      changePenWidth,
+      clear,
+      download,
+      getSvgXML,
+      undo,
+    ]
+  )
+
+  return [renderRef, draw]
 }
