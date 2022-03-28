@@ -6,6 +6,7 @@ import type { RefObject } from 'react'
 
 export type UseSvgDrawing = {
   ref: RefObject<SvgDrawing | null>
+  reset: () => void
   clear: () => void
   undo: () => void
   changePenColor: (penColor: DrawingOption['penColor']) => void

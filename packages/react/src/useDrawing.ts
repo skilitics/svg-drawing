@@ -50,6 +50,13 @@ export const useSvgDrawing = (
     if (!drawingRef.current) return
     drawingRef.current.undo()
   }, [])
+  const reset = useCallback(() => {
+    if (!renderRef.current) return
+    drawingRef.current?.off()
+    drawingRef.current = new SvgDrawing(renderRef.current, {
+      ...option,
+    })
+  }, [option])
   useEffect(() => {
     if (drawingRef.current) return
     if (!renderRef.current) return
@@ -69,6 +76,7 @@ export const useSvgDrawing = (
       changeCurve,
       clear,
       undo,
+      reset,
       getSvgXML,
       download,
     }),
@@ -82,6 +90,7 @@ export const useSvgDrawing = (
       clear,
       download,
       getSvgXML,
+      reset,
       undo,
     ]
   )
